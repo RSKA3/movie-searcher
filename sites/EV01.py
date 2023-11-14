@@ -2,13 +2,19 @@ from bs4 import BeautifulSoup
 import requests
 import re
 
+
 def main():
-
-    show_link = "https://ev01.sx/tv/watch-the-fresh-prince-of-belair-online-38438"
-    get_episode(show_link)
-
-
-
+    user_input = "the simpsons"
+    link = get_link(user_input)
+    shows = search(link)
+    print(link)
+    seasons = get_seasons(shows[1])
+    print(shows[1])
+    episodes = get_episodes(seasons["1"])
+    print(seasons["1"])
+    print(episodes["2"])
+    print(watch_link(shows[1], episodes["2"]))
+    
 
 # given link scrapes site and returns list of shows that are made up of dicts with titles, links etc.
 def search(URL):
@@ -30,6 +36,7 @@ def search(URL):
         #changes link from relative to absolute
         show["link"] = 'https://ev01.sx' + a_tag.get("href")
         show["title"] = a_tag.get("title")
+        show["id"] = show["link"].split("online-")[1]
 
         #gets all span elements and adds quality
         span_elements = show_html.find_all("span")
@@ -57,7 +64,7 @@ def search(URL):
 
 
 # given search term string removes bad characters and formats search link
-def build_link(user_search):
+def get_link(user_search):
     #remove all non alphanumeric, or whitespace characters
     fixed_search = re.sub(r"[^a-zA-Z0-9_ .,]", "", user_search)
 
@@ -67,10 +74,69 @@ def build_link(user_search):
     #returns fixed search link
     return "https://ev01.sx/search/" + fixed_search
 
-#TODO: get seasons and episodes and be able to navigate them
-# this will have to be implemented with selenium since the seasons and episodes takes a second to load
-# perhaps by making the browser "headless" or using phantomJS and finding the episodes
 
+# takes show and returns list of dicts with season and id
+def get_seasons(show):
+    #checks if show is of type series and returns error message if wrong
+    if not show["type"] == "series":
+        return "Error: Not a show"
+    
+    #creates URL
+    URL = "https://ev01.sx/ajax/season/list/" + show["id"]
+
+    #loads entire page
+    page = requests.get(URL)
+    page_soup = BeautifulSoup(page.content, 'html.parser')
+
+    seasons_html = page_soup.find_all("a")
+
+    seasons = {}
+    for season_html in seasons_html:
+
+        season = season_html.text.split()[1]
+        id = season_html.get("id").split("-")[1]
+
+        seasons[season] = id
+
+    return seasons
+
+# takes in season_id and fetches episode names and numbers
+def get_episodes(season_id):    
+    #creates URL
+    URL = "https://ev01.sx/ajax/season/episodes/" + season_id
+
+    #loads entire page
+    page = requests.get(URL)
+    page_soup = BeautifulSoup(page.content, 'html.parser')
+
+    episodes_html = page_soup.find_all("a")
+
+    episodes = {}
+    for episode_html in episodes_html:
+        
+
+        episode, title = episode_html.get("title").split(": ")
+        episode = episode.split(" ")[1]
+        id = episode_html.get("data-id")
+
+        episodes[episode] = {"title" : title, "id" : id}
+
+    return episodes
+
+
+def watch_link(show, episode):
+
+    URL = "https://ev01.sx/ajax/episode/servers/" + episode["id"]
+
+    #loads entire page
+    page = requests.get(URL)
+    page_soup = BeautifulSoup(page.content, 'html.parser')
+
+    first_tag = page_soup.find("a")
+    id = first_tag.get("data-id")
+
+    return show["link"].replace("tv", "watch-tv") + "." + id
+    
 
 if __name__ == "__main__":
     main()
