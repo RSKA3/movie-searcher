@@ -16,7 +16,7 @@ def main():
     print(watch_link(shows[1], episodes["2"]))
     
 
-# given link scrapes site and returns list of shows that are made up of dicts with titles, links etc.
+# given link scrapes site and returns list of shows that are made up of dicts with titles, links etc. if none found returns false
 def search(URL):
     #loads entire page
     page = requests.get(URL)
@@ -60,6 +60,8 @@ def search(URL):
 
         shows.append(show)
 
+    if shows == []:
+        return False
     return shows
 
 
@@ -114,8 +116,7 @@ def get_episodes(season_id):
     episodes = {}
     for episode_html in episodes_html:
         
-
-        episode, title = episode_html.get("title").split(": ")
+        episode, title = episode_html.get("title").split(": ", 1)
         episode = episode.split(" ")[1]
         id = episode_html.get("data-id")
 
@@ -132,7 +133,11 @@ def watch_link(show, episode):
     page = requests.get(URL)
     page_soup = BeautifulSoup(page.content, 'html.parser')
 
-    first_tag = page_soup.find("a")
+    if first_tag := page_soup.find("a", {"title" : "Server MegaCloud"}):
+        pass
+    else:
+        first_tag = page_soup.find("a")
+
     id = first_tag.get("data-id")
 
     return show["link"].replace("tv", "watch-tv") + "." + id
