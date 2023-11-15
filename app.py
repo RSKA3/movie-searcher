@@ -18,7 +18,7 @@ def main():
         if shows := EV01.search(link):
             break
         else:
-            print("No show found with", user_input)
+            print("No show found with search:", user_input)
     picked_show = choose_show(shows[0:5])
 
     os.system('clear')

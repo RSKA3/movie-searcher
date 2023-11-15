@@ -34,7 +34,11 @@ def search(URL):
         a_tag = show_html.find("a")
         
         #changes link from relative to absolute
-        show["link"] = 'https://ev01.sx' + a_tag.get("href")
+        if a_tag.get("href").startswith("/"):
+            show["link"] = 'https://ev01.sx' + a_tag.get("href")
+        else:
+            show["link"] = a_tag.get("href")
+
         show["title"] = a_tag.get("title")
         show["id"] = show["link"].split("online-")[1]
 
@@ -62,6 +66,7 @@ def search(URL):
 
     if shows == []:
         return False
+    
     return shows
 
 
