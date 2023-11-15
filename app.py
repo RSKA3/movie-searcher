@@ -28,7 +28,7 @@ def main():
         picked_season = choose_season(seasons)
 
         os.system('clear')
-        episodes = EV01.get_episodes(seasons[picked_season])
+        episodes = EV01.get_episodes(picked_season)
         picked_episode = choose_episode(episodes)
 
         URL = EV01.watch_link(picked_show, picked_episode)
@@ -43,20 +43,16 @@ def main():
 
     
 def choose_episode(episodes):
-    episodes_list = []
-    for episode in episodes:
-        episodes_list.append(episode + " " + episodes[episode]["title"])
-
     questions = [
     inquirer.List(
         "episode",
         message="Pick an episode",
-        choices = episodes_list
+        choices = [f"{i+1} {episode['title']}" for i, episode in enumerate(episodes)]
             ),
     ]
 
     answer = inquirer.prompt(questions)
-    return episodes[answer["episode"].split()[0]]
+    return episodes[int(answer["episode"][0])-1]
 
 def choose_season(seasons):
 
@@ -64,12 +60,12 @@ def choose_season(seasons):
     inquirer.List(
         "season",
         message="Pick a season",
-        choices = seasons.keys()
+        choices = [f"{i+1} {season['title']}"for i, season in enumerate(seasons)]
             ),
     ]
 
     answer = inquirer.prompt(questions)
-    return answer["season"]
+    return seasons[int(answer["season"][0])-1]
 
 
 def choose_show(shows):

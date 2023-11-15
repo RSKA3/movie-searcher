@@ -97,20 +97,21 @@ def get_seasons(show):
 
     seasons_html = page_soup.find_all("a")
 
-    seasons = {}
-    for season_html in seasons_html:
+    seasons = []
+    for i, season_html in enumerate(seasons_html):
 
-        season = season_html.text.split()[1]
+        # in case of series mr robot series are separated lik so: season_1.0 might be better to just grab text and not do any conversions
+        season = season_html.text
         id = season_html.get("id").split("-")[1]
 
-        seasons[season] = id
+        seasons.append({"title": season, "id": id})
 
     return seasons
 
 # takes in season_id and fetches episode names and numbers
-def get_episodes(season_id):    
+def get_episodes(season):    
     #creates URL
-    URL = "https://ev01.sx/ajax/season/episodes/" + season_id
+    URL = "https://ev01.sx/ajax/season/episodes/" + season["id"]
 
     #loads entire page
     page = requests.get(URL)
@@ -118,14 +119,14 @@ def get_episodes(season_id):
 
     episodes_html = page_soup.find_all("a")
 
-    episodes = {}
+    episodes = []
     for episode_html in episodes_html:
         
         episode, title = episode_html.get("title").split(": ", 1)
         episode = episode.split(" ")[1]
         id = episode_html.get("data-id")
 
-        episodes[episode] = {"title" : title, "id" : id}
+        episodes.append({"title" : title, "id" : id})
 
     return episodes
 
